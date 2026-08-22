@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#2b2b2b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Biltong Calculator</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+  :root {
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #f4f4f4;
+    color: #1a1a1a;
+    padding: 16px;
+    padding-bottom: 40px;
+    min-height: 100vh;
+  }
+  .card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  h1 {
+    font-size: 1.05rem;
+    margin: 0 0 12px 0;
+    font-weight: 700;
+  }
+  h2 {
+    font-size: 1.15rem;
+    margin: 0 0 10px 0;
+    font-weight: 700;
+  }
+  h3 {
+    font-size: 0.95rem;
+    margin: 16px 0 8px 0;
+    font-weight: 700;
+    color: #333;
+  }
+  .weight-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0;
+  }
+  .weight-row label {
+    flex: 1;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+  .stepper {
+    display: flex;
+    align-items: center;
+    background: #2b2b2b;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .stepper button {
+    background: #2b2b2b;
+    color: #fff;
+    border: none;
+    width: 44px;
+    height: 40px;
+    font-size: 1.3rem;
+    cursor: pointer;
+    user-select: none;
+  }
+  .stepper button:active {
+    background: #444;
+  }
+  .stepper input {
+    width: 70px;
+    height: 40px;
+    border: none;
+    text-align: center;
+    font-size: 1.05rem;
+    background: #3a3a3a;
+    color: #fff;
+    font-weight: 600;
+    -moz-appearance: textfield;
+  }
+  .stepper input::-webkit-outer-spin-button,
+  .stepper input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  ul {
+    margin: 0;
+    padding-left: 20px;
+  }
+  li {
+    margin-bottom: 8px;
+    line-height: 1.4;
+  }
+  .amount {
+    font-weight: 700;
+    color: #1a5fb4;
+  }
+  .note {
+    color: #666;
+    font-size: 0.85em;
+  }
+  .footer-note {
+    text-align: center;
+    color: #888;
+    font-size: 0.8rem;
+    margin-top: 20px;
+  }
+  a { color: #1a5fb4; }
+</style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="weight-row">
+      <label for="weight">How much does your meat weigh (grams)?</label>
+      <div class="stepper">
+        <button id="dec" aria-label="Decrease">&minus;</button>
+        <input id="weight" type="number" inputmode="numeric" value="1000" min="0" step="50">
+        <button id="inc" aria-label="Increase">+</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Ingredients</h2>
+
+    <h3>Meat</h3>
+    <ul>
+      <li><span class="amount" id="out-meat">1000</span> g Beef — silverside or topside/rump</li>
+    </ul>
+
+    <h3>Curing spice mix</h3>
+    <ul>
+      <li><span class="amount" id="out-vinegar">2.5</span> Tbsp Brown (malt) or cider vinegar</li>
+      <li><span class="amount" id="out-salt">1.25</span> Tbsp Coarse salt <span class="note">(2% of the meat weight)</span></li>
+      <li><span class="amount" id="out-pepper">1</span> tsp Ground black pepper</li>
+      <li><span class="amount" id="out-coriander">1</span> Tbsp Coriander seed</li>
+      <li><span class="amount" id="out-sugar">0.75</span> Tbsp Brown sugar <span class="note">(optional)</span></li>
+    </ul>
+  </div>
+
+  <div class="footer-note">Ratios based on <a href="https://www.greedyferret.com/perfect-biltong-recipe-south-african-beef-jerky#recipe" target="_blank" rel="noopener">Greedy Ferret's Perfect Biltong Recipe</a></div>
+
+<script>
+  // Base ratios per 1000 g of meat
+  const BASE = {
+    weight: 1000,
+    vinegar: 2.5,
+    salt: 1.25,
+    pepper: 1,
+    coriander: 1,
+    sugar: 0.75,
+  };
+
+  const weightInput = document.getElementById('weight');
+
+  function formatAmount(n) {
+    // Round to 2 decimal places (with epsilon correction for float error, e.g. 1.275 -> 1.28 not 1.27),
+    // then trim trailing zeros
+    const rounded = Math.round((n + 1e-9) * 100) / 100;
+    return rounded.toFixed(2).replace(/\.?0+$/, '');
+  }
+
+  function update() {
+    let weight = parseFloat(weightInput.value);
+    if (isNaN(weight) || weight < 0) weight = 0;
+    const factor = weight / BASE.weight;
+
+    document.getElementById('out-meat').textContent = weight;
+    document.getElementById('out-vinegar').textContent = formatAmount(BASE.vinegar * factor);
+    document.getElementById('out-salt').textContent = formatAmount(BASE.salt * factor);
+    document.getElementById('out-pepper').textContent = formatAmount(BASE.pepper * factor);
+    document.getElementById('out-coriander').textContent = formatAmount(BASE.coriander * factor);
+    document.getElementById('out-sugar').textContent = formatAmount(BASE.sugar * factor);
+  }
+
+  document.getElementById('inc').addEventListener('click', () => {
+    weightInput.value = (parseFloat(weightInput.value) || 0) + 50;
+    update();
+  });
+  document.getElementById('dec').addEventListener('click', () => {
+    weightInput.value = Math.max(0, (parseFloat(weightInput.value) || 0) - 50);
+    update();
+  });
+  weightInput.addEventListener('input', update);
+
+  update();
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('service-worker.js').catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>
