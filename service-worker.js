@@ -1,4 +1,4 @@
-const CACHE_NAME = 'biltong-calculator-v1';
+const CACHE_NAME = 'biltong-calculator-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -26,7 +26,15 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  // Network-first: always serve the latest version when online, so app
+  // updates show up on next load. Falls back to cache only when offline.
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
+    fetch(event.request)
+      .then((response) => {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
