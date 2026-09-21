@@ -147,6 +147,7 @@
       <li><span class="amount" id="out-salt">0.9</span> Tbsp Coarse salt <span class="note">(~1.45% of the meat weight, reduced from original 2%)</span></li>
       <li><span class="amount" id="out-pepper">1</span> tsp Ground black pepper</li>
       <li><span class="amount" id="out-coriander">1</span> Tbsp Coriander seed</li>
+      <li><span class="amount" id="out-chili">1.5</span> tsp Crushed chili flakes</li>
       <li><span class="amount" id="out-sugar">0.75</span> Tbsp Brown sugar <span class="note">(optional)</span></li>
     </ul>
   </div>
@@ -161,6 +162,7 @@
     salt: 0.903125, // 15% less again on top of the previous 15% cut (original was 1.25, i.e. 2% of meat weight)
     pepper: 1,
     coriander: 1,
+    chili: 1.5,
     sugar: 0.75,
   };
 
@@ -183,6 +185,7 @@
     document.getElementById('out-salt').textContent = formatAmount(BASE.salt * factor);
     document.getElementById('out-pepper').textContent = formatAmount(BASE.pepper * factor);
     document.getElementById('out-coriander').textContent = formatAmount(BASE.coriander * factor);
+    document.getElementById('out-chili').textContent = formatAmount(BASE.chili * factor);
     document.getElementById('out-sugar').textContent = formatAmount(BASE.sugar * factor);
   }
 
